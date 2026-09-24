@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Exhibition</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+  :root {
+    --bg: #17140F;
+    --surface: #211D17;
+    --surface-2: #2A251D;
+    --line: #3A3428;
+    --text: #EDE6D8;
+    --muted: #9C9282;
+    --gold: #C9A227;
+    --clay: #A85D3B;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'IBM Plex Sans', sans-serif;
+    padding: 0 0 4rem;
+  }
+  header {
+    padding: 3.5rem 2rem 2rem;
+    max-width: 1100px;
+    margin: 0 auto;
+    border-bottom: 1px solid var(--line);
+  }
+  h1 {
+    font-family: 'Fraunces', serif;
+    font-weight: 600;
+    font-size: clamp(2.2rem, 5vw, 3.4rem);
+    margin: 0 0 0.4rem;
+    letter-spacing: -0.01em;
+  }
+  .tagline { color: var(--muted); font-size: 1.05rem; margin: 0; }
+  .stats-row {
+    display: flex; gap: 2.5rem; margin-top: 1.8rem; flex-wrap: wrap;
+  }
+  .stat .num { font-family: 'Fraunces', serif; font-size: 1.9rem; color: var(--gold); }
+  .stat .label { color: var(--muted); font-size: 0.85rem; }
+
+  main { max-width: 1100px; margin: 0 auto; padding: 2.5rem 2rem 0; }
+
+  section.charts {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 3rem;
+  }
+  @media (max-width: 700px) { section.charts { grid-template-columns: 1fr; } }
+  .chart-card {
+    background: var(--surface); border: 1px solid var(--line); border-radius: 6px;
+    padding: 1.2rem 1.4rem 1.6rem;
+  }
+  .chart-card h3 {
+    font-family: 'Fraunces', serif; font-weight: 400; font-size: 1.05rem;
+    margin: 0 0 1rem; color: var(--text);
+  }
+
+  .gallery-head {
+    display: flex; justify-content: space-between; align-items: baseline;
+    margin-bottom: 1.2rem; flex-wrap: wrap; gap: 1rem;
+  }
+  .gallery-head h2 { font-family: 'Fraunces', serif; font-weight: 400; font-size: 1.6rem; margin: 0; }
+  button.primary {
+    background: var(--gold); color: #17140F; border: none; padding: 0.7rem 1.3rem;
+    border-radius: 4px; font-weight: 600; cursor: pointer; font-size: 0.92rem;
+  }
+  button.primary:hover { filter: brightness(1.08); }
+
+  .grid {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 1.2rem;
+  }
+  .card {
+    background: var(--surface); border: 1px solid var(--line); border-radius: 6px;
+    padding: 1.2rem; position: relative;
+  }
+  .card .medium-tag {
+    display: inline-block; color: var(--clay); font-size: 0.78rem; margin-bottom: 0.5rem;
+  }
+  .card h3 { font-family: 'Fraunces', serif; font-weight: 600; margin: 0 0 0.2rem; font-size: 1.2rem; }
+  .card .artist { color: var(--muted); font-size: 0.9rem; margin: 0 0 0.8rem; }
+  .card .price { color: var(--gold); font-family: 'Fraunces', serif; font-size: 1.1rem; }
+  .card .actions { margin-top: 1rem; display: flex; gap: 0.6rem; }
+  .card .actions button {
+    background: transparent; border: 1px solid var(--line); color: var(--muted);
+    padding: 0.4rem 0.7rem; border-radius: 4px; cursor: pointer; font-size: 0.82rem;
+  }
+  .card .actions button:hover { border-color: var(--gold); color: var(--text); }
+
+  .empty { color: var(--muted); padding: 2rem 0; text-align: center; }
+
+  dialog {
+    background: var(--surface-2); color: var(--text); border: 1px solid var(--line);
+    border-radius: 8px; padding: 2rem; width: min(420px, 90vw);
+  }
+  dialog::backdrop { background: rgba(0,0,0,0.6); }
+  dialog h3 { font-family: 'Fraunces', serif; margin-top: 0; }
+  .field { margin-bottom: 1rem; display: flex; flex-direction: column; gap: 0.4rem; }
+  .field label { font-size: 0.85rem; color: var(--muted); }
+  .field input, .field select {
+    background: var(--bg); border: 1px solid var(--line); color: var(--text);
+    padding: 0.6rem 0.7rem; border-radius: 4px; font-size: 0.95rem; font-family: inherit;
+  }
+  .dialog-actions { display: flex; justify-content: flex-end; gap: 0.7rem; margin-top: 1.4rem; }
+  .dialog-actions button.ghost {
+    background: transparent; border: 1px solid var(--line); color: var(--muted);
+    padding: 0.6rem 1.1rem; border-radius: 4px; cursor: pointer;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>The Exhibition</h1>
+  <p class="tagline">A working catalogue of the collection — watercolor, acrylic, sketch, and more.</p>
+  <div class="stats-row">
+    <div class="stat"><div class="num" id="stat-count">–</div><div class="label">Artworks</div></div>
+    <div class="stat"><div class="num" id="stat-value">–</div><div class="label">Total value</div></div>
+  </div>
+</header>
+
+<main>
+  <section class="charts">
+    <div class="chart-card"><h3>Pieces by medium</h3><canvas id="chart-count"></canvas></div>
+    <div class="chart-card"><h3>Value by medium</h3><canvas id="chart-value"></canvas></div>
+  </section>
+
+  <div class="gallery-head">
+    <h2>Collection</h2>
+    <button class="primary" onclick="openDialog()">Add artwork</button>
+  </div>
+  <div class="grid" id="gallery"></div>
+</main>
+
+<dialog id="dialog">
+  <h3 id="dialog-title">Add artwork</h3>
+  <input type="hidden" id="f-id">
+  <div class="field">
+    <label for="f-title">Title</label>
+    <input id="f-title" type="text" placeholder="Evening on the Buriganga">
+  </div>
+  <div class="field">
+    <label for="f-artist">Artist</label>
+    <input id="f-artist" type="text" placeholder="Artist name">
+  </div>
+  <div class="field">
+    <label for="f-medium">Medium</label>
+    <select id="f-medium">
+      <option>Watercolor</option>
+      <option>Acrylic</option>
+      <option>Oil</option>
+      <option>Sketch</option>
+      <option>Pen Sketch</option>
+      <option>Charcoal</option>
+      <option>Digital</option>
+    </select>
+  </div>
+  <div class="field">
+    <label for="f-price">Price</label>
+    <input id="f-price" type="number" min="0" step="0.01" placeholder="0.00">
+  </div>
+  <div class="dialog-actions">
+    <button class="ghost" onclick="closeDialog()">Cancel</button>
+    <button class="primary" onclick="saveArtwork()">Save</button>
+  </div>
+</dialog>
+
+<script>
+const API = '/api/artworks';
+let countChart, valueChart;
+
+async function loadGallery() {
+  const res = await fetch(API);
+  const items = await res.json();
+  const grid = document.getElementById('gallery');
+  grid.innerHTML = '';
+  if (items.length === 0) {
+    grid.innerHTML = '<div class="empty">No artwork yet — add the first piece to the collection.</div>';
+  }
+  items.forEach(a => {
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.innerHTML = `
+      <span class="medium-tag">${a.medium}</span>
+      <h3>${a.title}</h3>
+      <p class="artist">${a.artist}</p>
+      <div class="price">$${a.price.toFixed(2)}</div>
+      <div class="actions">
+        <button onclick='openDialog(${JSON.stringify(a)})'>Edit</button>
+        <button onclick="deleteArtwork(${a.id})">Delete</button>
+      </div>`;
+    grid.appendChild(card);
+  });
+}
+
+async function loadStats() {
+  const res = await fetch(API + '/stats');
+  const stats = await res.json();
+  document.getElementById('stat-count').textContent = stats.total_artworks;
+  document.getElementById('stat-value').textContent = '$' + stats.total_value.toFixed(2);
+
+  const labels = stats.by_medium.map(m => m.medium);
+  const counts = stats.by_medium.map(m => m.count);
+  const values = stats.by_medium.map(m => m.total_price);
+
+  const gold = '#C9A227', clay = '#A85D3B';
+
+  if (countChart) countChart.destroy();
+  countChart = new Chart(document.getElementById('chart-count'), {
+    type: 'bar',
+    data: { labels, datasets: [{ data: counts, backgroundColor: gold, borderRadius: 3 }] },
+    options: chartOptions()
+  });
+
+  if (valueChart) valueChart.destroy();
+  valueChart = new Chart(document.getElementById('chart-value'), {
+    type: 'bar',
+    data: { labels, datasets: [{ data: values, backgroundColor: clay, borderRadius: 3 }] },
+    options: chartOptions()
+  });
+}
+
+function chartOptions() {
+  return {
+    plugins: { legend: { display: false } },
+    scales: {
+      x: { ticks: { color: '#9C9282' }, grid: { color: '#3A3428' } },
+      y: { ticks: { color: '#9C9282' }, grid: { color: '#3A3428' }, beginAtZero: true }
+    }
+  };
+}
+
+function openDialog(a) {
+  document.getElementById('dialog-title').textContent = a ? 'Edit artwork' : 'Add artwork';
+  document.getElementById('f-id').value = a ? a.id : '';
+  document.getElementById('f-title').value = a ? a.title : '';
+  document.getElementById('f-artist').value = a ? a.artist : '';
+  document.getElementById('f-medium').value = a ? a.medium : 'Watercolor';
+  document.getElementById('f-price').value = a ? a.price : '';
+  document.getElementById('dialog').showModal();
+}
+function closeDialog() { document.getElementById('dialog').close(); }
+
+async function saveArtwork() {
+  const id = document.getElementById('f-id').value;
+  const payload = {
+    title: document.getElementById('f-title').value,
+    artist: document.getElementById('f-artist').value,
+    medium: document.getElementById('f-medium').value,
+    price: parseFloat(document.getElementById('f-price').value) || 0
+  };
+  if (id) {
+    await fetch(`${API}/${id}`, { method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify(payload) });
+  } else {
+    await fetch(API, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(payload) });
+  }
+  closeDialog();
+  await refresh();
+}
+
+async function deleteArtwork(id) {
+  if (!confirm('Delete this artwork?')) return;
+  await fetch(`${API}/${id}`, { method: 'DELETE' });
+  await refresh();
+}
+
+async function refresh() {
+  await loadGallery();
+  await loadStats();
+}
+refresh();
+</script>
+</body>
+</html>
