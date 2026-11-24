@@ -1,0 +1,15 @@
+# Build outputs
+art_exhibit
+art_exhibit.exe
+*.o
+*.obj
+
+# Local SQLite database
+artexhibit.db
+*.db-journal
+*.db-wal
+*.db-shm
+
+# Python caches
+__pycache__/
+*.py[cod]

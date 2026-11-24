@@ -1,22 +1,21 @@
-# The Exhibition — Art Inventory System (C + SQLite + Web Dashboard)
+# The Exhibition — Art Inventory System (C + Python + SQLite + Web Dashboard)
 
-A full-stack art exhibition manager: the backend is written entirely in C,
-storing artworks in a SQLite database and serving a JSON API over raw
-sockets. The frontend is a single HTML dashboard with a gallery view and
-live charts (via Chart.js), talking to the C server through `fetch`.
+A full-stack art exhibition manager with **two interchangeable backends** — one written in **C** (raw sockets + SQLite) and one written in **Python** (zero-dependency standard library `http.server` + `sqlite3`). Both backends implement the exact same REST API and share the same SQLite database (`artexhibit.db`) and web dashboard (`public/index.html`) with a gallery view and live charts (Chart.js).
 
 ## Project structure
 
 ```
 art_exhibit/
-├── src/
-│   ├── artwork.h        # the core Artwork struct
+├── src/                  # C backend (raw sockets + SQLite)
+│   ├── artwork.h         # the core Artwork struct
 │   ├── db.h / db.c       # SQLite CRUD layer
 │   ├── json.h / json.c   # hand-rolled JSON encode/decode (no deps)
-│   ├── http_server.h/.c  # minimal HTTP server (sockets) + routing
+│   ├── http_server.h/.c  # minimal HTTP server (POSIX + Winsock2) + routing
 │   └── main.c            # entry point
+├── backend_py/
+│   └── app.py            # zero-dependency Python backend (same API + SQLite DB)
 ├── public/
-│   └── index.html         # gallery + charts dashboard (served by the C app)
+│   └── index.html        # shared gallery + charts dashboard
 └── README.md
 ```
 
@@ -36,6 +35,8 @@ typedef struct {
 
 Requires `gcc` and the SQLite3 dev headers.
 
+### Linux / macOS
+
 ```bash
 # Debian/Ubuntu, if not already installed:
 sudo apt-get install libsqlite3-dev
@@ -44,16 +45,38 @@ gcc -Wall -o art_exhibit src/main.c src/db.c src/json.c src/http_server.c \
     -lsqlite3 -D_GNU_SOURCE
 ```
 
-## Run
+### Windows (MSYS2 UCRT64)
 
-```bash
-./art_exhibit
+```powershell
+# Install SQLite3 headers and library via MSYS2, if not already installed:
+C:\msys64\usr\bin\pacman.exe -S --needed mingw-w64-ucrt-x86_64-sqlite3
+
+gcc -Wall -o art_exhibit.exe src/main.c src/db.c src/json.c src/http_server.c `
+    -lsqlite3 -lws2_32
 ```
 
-Then open **http://localhost:8080** in a browser. The `public/` folder must
-sit next to the executable (it's served as static files), and a
-`artexhibit.db` SQLite file is created automatically on first run in the
-working directory.
+## Run
+
+You can run **either** backend — both serve `public/index.html` and read/write the same `artexhibit.db` file:
+
+### C Backend
+
+```bash
+./art_exhibit       # Linux / macOS
+.\art_exhibit.exe   # Windows
+```
+
+### Python Backend (zero dependencies, Python 3.10+)
+
+```bash
+python backend_py/app.py
+# Or run side-by-side with the C backend on a different port:
+python backend_py/app.py --port 8081
+```
+
+Then open **http://localhost:8080** (or `:8081`) in a browser. The `public/` folder must
+sit at the repository root (it's served as static files), and an
+`artexhibit.db` SQLite file is created automatically on first run.
 
 ## API
 
